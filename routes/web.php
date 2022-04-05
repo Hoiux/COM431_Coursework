@@ -20,8 +20,3 @@ Route::get('fetch-comments', [AjaxCOMMENTCRUDController::class, 'fetchComments']
 Route::get('edit-comment/{id}', [AjaxCOMMENTCRUDController::class, 'edit']);
 Route::put('update-comment/{id}', [AjaxCOMMENTCRUDController::class, 'update']);
 Route::delete('delete-comment/{id}', [AjaxCOMMENTCRUDController::class, 'destroy']);
-
-
-Route::get('/', function () {
-    return view('welcome');
-});

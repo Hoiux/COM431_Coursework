@@ -15,6 +15,6 @@ class Comment extends Model
         'type',
         'author_name',
         'author_email',
-        'selected'
+        'pending_approval'
     ];
 }

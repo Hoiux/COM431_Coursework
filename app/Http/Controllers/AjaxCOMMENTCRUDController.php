@@ -9,19 +9,33 @@ use Illuminate\Support\Facades\Validator;
 
 class AjaxCOMMENTCRUDController extends Controller
 {
-    public function index() {
+    public function index()
+    {
         return view('ajax-comment-crud');
     }
 
-    public function fetchComments() {
+    public function fetchComments()
+    {
         $comments = Comment::all();
+
+        $comments_for_display = collect();
+
+        foreach ($comments as &$comment) {
+            if (!$comment->pending_approval) { // filter unapproved commments
+                $comments_for_display->add($comment);
+            }
+        }
+
+        unset($comment); // break the reference with the last element
+
         return response()->json([
-            'comments' => $comments,
+            'comments' => $comments_for_display,
         ]);
     }
 
     // show the form for editing the specified comment
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'text' => 'required',
             'code' => 'required',
@@ -29,12 +43,13 @@ class AjaxCOMMENTCRUDController extends Controller
             'type' => 'required',
             'author_name' => 'required',
             'author_email' => 'required',
+            'pending_approval' => 'required'
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => 400,
-                'errors' => $validator->messages()
+                'errors' => $validator->errors()
             ]);
         } else {
             $comment = new Comment;
@@ -44,6 +59,7 @@ class AjaxCOMMENTCRUDController extends Controller
             $comment->type = $request->input('type');
             $comment->author_name = $request->input('author_name');
             $comment->author_email = $request->input('author_email');
+            $comment->pending_approval = $request->input('pending_approval');
 
             $comment->save();
             return response()->json([
@@ -51,11 +67,11 @@ class AjaxCOMMENTCRUDController extends Controller
                 'message' => 'Comment Successfully Added.'
             ]);
         }
-
     }
 
     // edit an existing comment
-    public function edit($id){
+    public function edit($id)
+    {
         $comment = Comment::find($id);
         if ($comment) {
             return response()->json([
@@ -71,7 +87,8 @@ class AjaxCOMMENTCRUDController extends Controller
     }
 
     // update an existing comment
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         $validator = Validator::make($request->all(), [
             'text' => 'required',
             'code' => 'required',
@@ -79,20 +96,25 @@ class AjaxCOMMENTCRUDController extends Controller
             'type' => 'required',
             'author_name' => 'required',
             'author_email' => 'required',
+            'pending_approval' => 'required'
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => 400,
-                'errors' => $validator->messages()
+                'errors' => $validator->errors()
             ]);
         } else {
             $comment = Comment::find($id);
             if ($comment) {
-                $comment->title = $request->input('title');
+                $comment->text = $request->input('text');
                 $comment->code = $request->input('code');
-                $comment->author = $request->input('author');
-                $comment->year = $request->input('year');
+                $comment->feedback = $request->input('feedback');
+                $comment->type = $request->input('type');
+                $comment->author_name = $request->input('author_name');
+                $comment->author_email = $request->input('author_email');
+                $comment->pending_approval = $request->input('pending_approval');
+
                 $comment->update();
                 return response()->json([
                     'status' => 200,
@@ -108,7 +130,8 @@ class AjaxCOMMENTCRUDController extends Controller
     }
 
     // remove the specified comment
-    public function destroy($id){
+    public function destroy($id)
+    {
         $comment = Comment::find($id);
         if ($comment) {
             $comment->delete();

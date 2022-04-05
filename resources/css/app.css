@@ -1,13 +1,35 @@
+@media (max-width: 600px) {
+    section {
+      -webkit-flex-direction: column;
+      flex-direction: column;
+    }
+}
+
+span.a {
+    display: block;
+    width: 200px;
+    height: 1000px;
+    padding: 5px;
+    border: 1px solid black;
+    background-color: grey;
+}
+
 body {
     background: #00AAA0;
     margin-top: 100px;
-    font-family: 'Ropa Sans', sans-serif;
-    }
+    font-family: sans-serif;
+}
+
 h1 {
     color: #ffff;
     font-weight: normal;
-    }
-
-div {
-    padding-left: 100px;
 }
+
+table {
+    -webkit-flex: 3;
+    -ms-flex: 3;
+    flex: 3;
+    padding: 10px;
+    float: right;
+}
+

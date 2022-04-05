@@ -23,21 +23,23 @@ $(document).ready(function ($) {
                 $('tbody').html("");
                 $.each(res.comments, function (key, item) {
 
-                    $('tbody').append('<tr>\
+                    //if (!item.pending_approval) {
+
+                        var feedback = (item.feedback) ? 'Positive' : 'Negative';
+
+                        $('tbody').append('<tr>\
         <td><input type="checkbox" name="selected" id="selected' + item.id + '" value="' + item.selected + '"/></td>\
         <td>' + item.id + '</td>\
         <td>' + item.text + '</td>\
         <td>' + item.code + '</td>\
-        <td>' + item.feedback + '</td>\
+        <td>' + feedback + '</td>\
         <td>' + item.type + '</td>\
         <td>' + item.author_name + '</td>\
         <td>' + item.author_email + '</td>\
-        <td><button type="button" data-id="' + item.id + '" class="btn btn-primary edit btn-sm">Edit</button>\
-        <button type="button" data-id="' + item.id + '" class="btn btn-danger delete btn-sm">Delete</button></td>\
         </tr>');
+                    //}
                 });
             },
-
             complete: function () {
                 isChecked();
             }
@@ -55,13 +57,103 @@ $(document).ready(function ($) {
         $('#ajax-comment-model').modal('show');
     });
 
+    $('#editComment').click(function (evt) {
+        evt.preventDefault();
+        var id = -1;
+
+        $("#Table1 input[type=checkbox]:checked").each(function () {
+            // choose bottom-most selected comment
+            var row = $(this).closest("tr")[0];
+            id = row.cells[1].innerHTML;
+        });
+
+        if (id == -1)
+        {
+            // TODO display error message here
+            return;
+        }
+
+        // ajax
+        $.ajax({
+            type: "GET",
+            url: "edit-comment/" + id,
+            dataType: 'json',
+            success: function (res) {
+                console.dir(res);
+                $('#ajaxCommentModel').html("Edit Comment");
+                $('#btn-add').hide();
+                $('#btn-save').show();
+                //$('#ajax-comment-model').modal('show');
+
+                if (res.status == 404) {
+                    $('#msgList').html("");
+                    $('#msgList').addClass('alert alert-danger');
+                    $('#msgList').text(res.message);
+
+                } else {
+
+                    // console.log(res.book.xxx);
+                    $('#comment').val(res.comment.text);
+                    $('#code').val(res.comment.code);
+                    $('#feedback').val(res.comment.feedback);
+                    $('#type').val(res.comment.type);
+                    $('#author_name').val(res.comment.author_name);
+                    $('#author_email').val(res.comment.author_email);
+                    $('#id').val(res.comment.id);
+                }
+            }
+        });
+    });
+
+    $('#deleteComment').click(function (evt) {
+        evt.preventDefault();
+        var id = -1;
+
+        $("#Table1 input[type=checkbox]:checked").each(function () {
+            // choose bottom-most selected comment
+            var row = $(this).closest("tr")[0];
+            id = row.cells[1].innerHTML;
+        });
+
+        if (id == -1)
+        {
+            // TODO display error message here
+            return;
+        }
+
+        // ajax
+        $.ajax({
+            type: "DELETE",
+            url: "delete-comment/" + id,
+            dataType: 'json',
+            success: function (res) {
+                // console.log(res);
+                if (res.status == 404) {
+                    $('#message').addClass('alert alert-danger');
+                    $('#message').text(res.message);
+                } else {
+                    $('#message').html("");
+                    $('#message').addClass('alert alert-success');
+                    $('#message').text(res.message);
+                }
+                fetchComments();
+            }
+        });
+    });
+
+    $('#admin').click(function(evt) {
+        evt.preventDefault();
+        
+
+    });
 
     $('body').on('click', '#btn-add', function (event) {
         event.preventDefault();
-        var text = $("#text").val();
+
+        var comment = $("#comment").val();
         var code = $("#code").val();
-        var feedback = $("#feedback").val();
-        var type = $("#type").val();
+        var feedback = ($("#feedback").val() == 'checked') ? 1 : 0;
+        var type = ($("#type").val() == 'checked') ? "INTRO" : "ABSTRACT";
         var author_name = $("#author_name").val();
         var author_email = $("#author_email").val();
         $("#btn-add").html('Please Wait...');
@@ -73,12 +165,13 @@ $(document).ready(function ($) {
             url: "save-comment",
 
             data: {
-                text: text,
+                text: comment,
                 code: code,
                 feedback: feedback,
                 type: type,
                 author_name: author_name,
                 author_email: author_email,
+                pending_approval: 1,
             },
 
             dataType: 'json',
@@ -110,77 +203,77 @@ $(document).ready(function ($) {
         });
     });
 
-    $('body').on('click', '.edit', function (evt) {
-        evt.preventDefault();
-        var id = $(this).data('id');
 
-        // ajax
-        $.ajax({
-            type: "GET",
-            url: "edit-comment/" + id,
-            dataType: 'json',
-            success: function (res) {
-                console.dir(res);
-                $('#ajaxCommentModel').html("Edit Comment");
-                $('#btn-add').hide();
-                $('#btn-save').show();
-                $('#ajax-comment-model').modal('show');
 
-                if (res.status == 404) {
-                    $('#msgList').html("");
-                    $('#msgList').addClass('alert alert-danger');
-                    $('#msgList').text(res.message);
+    // $('body').on('click', '.edit', function (evt) {
+    //     evt.preventDefault();
+    //     var id = $(this).data('id');
 
-                } else {
+    //     // ajax
+    //     $.ajax({
+    //         type: "GET",
+    //         url: "edit-comment/" + id,
+    //         dataType: 'json',
+    //         success: function (res) {
+    //             console.dir(res);
+    //             $('#ajaxCommentModel').html("Edit Comment");
+    //             $('#btn-add').hide();
+    //             $('#btn-save').show();
+    //             //$('#ajax-comment-model').modal('show');
 
-                    // console.log(res.book.xxx);
-                    $('#text').val(res.comment.text);
-                    $('#code').val(res.comment.code);
-                    $('#feedback').val(res.comment.feedback);
-                    $('#type').val(res.comment.type);
-                    $('#author_name').val(res.comment.author_name);
-                    $('#author_email').val(res.comment.author_email);
-                    $('#id').val(res.comment.id);
+    //             if (res.status == 404) {
+    //                 $('#msgList').html("");
+    //                 $('#msgList').addClass('alert alert-danger');
+    //                 $('#msgList').text(res.message);
 
-                }
+    //             } else {
 
-            }
-        });
-    });
+    //                 // console.log(res.book.xxx);
+    //                 $('#comment').val(res.comment.text);
+    //                 $('#code').val(res.comment.code);
+    //                 $('#feedback').val(res.comment.feedback);
+    //                 $('#type').val(res.comment.type);
+    //                 $('#author_name').val(res.comment.author_name);
+    //                 $('#author_email').val(res.comment.author_email);
+    //                 $('#id').val(res.comment.id);
+    //             }
+    //         }
+    //     });
+    // });
 
-    $('body').on('click', '.delete', function (evt) {
-        evt.preventDefault();
-        if (confirm("Delete Comment?") == true) {
-            var id = $(this).data('id');
+    // $('body').on('click', '.delete', function (evt) {
+    //     evt.preventDefault();
+    //     if (confirm("Delete Comment?") == true) {
+    //         var id = $(this).data('id');
 
-            // ajax
-            $.ajax({
-                type: "DELETE",
-                url: "delete-comment/" + id,
-                dataType: 'json',
-                success: function (res) {
-                    // console.log(res);
-                    if (res.status == 404) {
-                        $('#message').addClass('alert alert-danger');
-                        $('#message').text(res.message);
-                    } else {
-                        $('#message').html("");
-                        $('#message').addClass('alert alert-success');
-                        $('#message').text(res.message);
-                    }
-                    fetchComments();
-                }
-            });
-        }
-    }); 
+    //         // ajax
+    //         $.ajax({
+    //             type: "DELETE",
+    //             url: "delete-comment/" + id,
+    //             dataType: 'json',
+    //             success: function (res) {
+    //                 // console.log(res);
+    //                 if (res.status == 404) {
+    //                     $('#message').addClass('alert alert-danger');
+    //                     $('#message').text(res.message);
+    //                 } else {
+    //                     $('#message').html("");
+    //                     $('#message').addClass('alert alert-success');
+    //                     $('#message').text(res.message);
+    //                 }
+    //                 fetchComments();
+    //             }
+    //         });
+    //     }
+    // });
 
     $('body').on('click', '#btn-save', function (event) {
         event.preventDefault();
         var id = $("#id").val();
-        var text = $("#text").val();
+        var comment = $("#comment").val();
         var code = $("#code").val();
-        var feedback = $("#feedback").val();
-        var type = $("#type").val();
+        var feedback = ($("#feedback").val() == 'checked') ? 1 : 0;
+        var type = ($("#type").val() == 'checked') ? "INTRO" : "ABSTRACT";
         var author_name = $("#author_name").val();
         var author_email = $("#author_email").val();
 
@@ -193,7 +286,7 @@ $(document).ready(function ($) {
             type: "PUT",
             url: "update-comment/" + id,
             data: {
-                text: text,
+                text: comment,
                 code: code,
                 feedback: feedback,
                 type: type,
@@ -238,12 +331,7 @@ $(document).ready(function ($) {
         $("#Table1 input[type=checkbox]:checked").each(function () {
             var row = $(this).closest("tr")[0];
 
-            // message += row.cells[2].innerHTML;
-            message += " " + row.cells[3].innerHTML;
-
-            // message += " " + row.cells[4].innerHTML;
-            message += "\n-----------------------\n";
-
+            message += row.cells[2].innerHTML;
         });
 
 

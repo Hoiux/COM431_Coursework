@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('type');
             $table->string('author_name');
             $table->string('author_email');
+            $table->boolean('pending_approval');
             $table->timestamps();
         });
     }
