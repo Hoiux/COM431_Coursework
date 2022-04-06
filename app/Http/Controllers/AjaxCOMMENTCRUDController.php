@@ -14,14 +14,41 @@ class AjaxCOMMENTCRUDController extends Controller
         return view('ajax-comment-crud');
     }
 
+    public function authenticate(Request $request)
+    {
+        $password = $request->input("password");
+
+        if ($password === 'admin') {
+            session(['isadmin' => 'true']);
+            return response()->json([
+                'status' => 200
+            ]);
+        } else {
+            session(['isadmin' => 'false']);
+            return response()->json([
+                'status' => 400,
+                'message' => 'Incorrect password: ' . $password
+            ]);
+        }
+    }
+
     public function fetchComments()
     {
         $comments = Comment::all();
 
         $comments_for_display = collect();
 
+        $value = session('isadmin', 'false');
+        $is_admin = ($value === 'true');
+
         foreach ($comments as &$comment) {
-            if (!$comment->pending_approval) { // filter unapproved commments
+            if ($is_admin) {
+                if ($comment->pending_approval) {
+                    // admin only gets to-be-approved comments
+                    $comments_for_display->add($comment);
+                }
+            } else if (!$comment->pending_approval) {
+                // non-admin only sees approved comments
                 $comments_for_display->add($comment);
             }
         }
@@ -29,7 +56,7 @@ class AjaxCOMMENTCRUDController extends Controller
         unset($comment); // break the reference with the last element
 
         return response()->json([
-            'comments' => $comments_for_display,
+            'comments' => $comments_for_display
         ]);
     }
 
@@ -107,13 +134,14 @@ class AjaxCOMMENTCRUDController extends Controller
         } else {
             $comment = Comment::find($id);
             if ($comment) {
+                $is_admin = $request->session()->has('isadmin') && ($request->session()->get('isadmin', 'false') == 'true');
                 $comment->text = $request->input('text');
                 $comment->code = $request->input('code');
                 $comment->feedback = $request->input('feedback');
                 $comment->type = $request->input('type');
                 $comment->author_name = $request->input('author_name');
                 $comment->author_email = $request->input('author_email');
-                $comment->pending_approval = $request->input('pending_approval');
+                $comment->pending_approval = $is_admin ? 0 : 1;
 
                 $comment->update();
                 return response()->json([

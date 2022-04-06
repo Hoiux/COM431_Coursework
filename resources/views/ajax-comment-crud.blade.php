@@ -1,27 +1,24 @@
 @extends('base')
 @section('main')
-    <div class="container mt-2">
+    <!-- admin password form -->
+    <div class="container mt-2" id="password-field">
+        <h3>Administrator Password</h3>
+        <form action="javascript:void(0)" id="tryAdminForm" name="tryAdminForm" class="form-horizontal" method="POST">
+            <input type="text" class="form-control" id="admin_password" name="admin_password" placeholder="Admin Password"
+                value="" maxlength="128" required="">
+            <button type="submit" class="btn btn-primary" id="btn-sendAdminPassword"
+                value="sendAdminPassword">Submit</button>
+            <button type="button" class="btn btn-primary" id="btn-cancelAdminPassword">Cancel</button>
+        </form>
+        <div id="login-messages"></div>
+    </div>
+
+    <div class="container mt-2" id="comment-bank">
         <div class="row">
             <div class="col-md-12 card-header text-center font-weight-bold">
-                <h2>Comment Bank</h2>
+                <h1>Comment Bank</h1>
             </div>
             <div id="message"></div>
-
-            <!--
-                <section>
-                    <span class="a">
-                        <nav>
-                            <ul>
-                                <li><a href="#">Display Comment Bank</a></li>
-                                <li><a href="#">Modify Comment Bank</a></li>
-                                <li><a href="#">Display Unverified Comments</a></li>
-                                <li><a href="#">Show All Comments</a></li>
-                            </ul>
-                        </nav>
-                    </span>
-                </section>
-                -->
-
 
             <div class="col-md-12">
                 <table id="Table1" class="table">
@@ -55,16 +52,18 @@
         </div>
 
         <div>
-            <textarea id="messageList" rows="10" cols="100">Selection</textarea> <button type="button" id="copy">Copy</button>
+            <textarea id="messageList" rows="10" cols="100">Selection</textarea>
+        </div>
+
+        <div class="col-md-12 mt-1 mb-2" id="comment-buttons">
+            <button type="button" id="copy" class="button2">Copy</button>
+            <button type="button" id="addNewComment" class="btn btn-success">Add New Comment</button>
+            <button type="button" id="editComment" class="btn btn-success">Edit Comment</button>
+            <button type="button" id="deleteComment" class="btn btn-success">Delete Comment</button>
+            <button type="button" id="adminLogin" class="btn btn-success">Login as Admin</button>
         </div>
     </div>
 
-    <div class="col-md-12 mt-1 mb-2">
-        <button type="button" id="addNewComment" class="btn btn-success">Add New Comment</button>
-        <button type="button" id="editComment" class="btn btn-success">Edit Comment</button>
-        <button type="button" id="deleteComment" class="btn btn-success">Delete Comment</button>
-        <button onclick="location.href='{{ url('admin-funcs') }}'">Admin Functions</button>
-    </div>
 
     <!-- boostrap model -->
     <div class="modal fade" id="ajax-comment-model" aria-hidden="true">
@@ -139,14 +138,12 @@
                             </div>
                         </div>
 
-
                         <div class="col-sm-offset-2 col-sm-10">
                             <button type="submit" class="btn btn-primary" id="btn-add" value="addNewComment">Save</button>
                             <button type="submit" class="btn btn-primary" id="btn-save" value="UpdateComment">Save
                                 changes</button>
                         </div>
                     </form>
-
                 </div>
 
                 <div class="modal-footer">

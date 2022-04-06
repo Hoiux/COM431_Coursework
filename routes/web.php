@@ -14,9 +14,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 use App\Http\Controllers\AjaxCOMMENTCRUDController;
+
 Route::get('ajax-comment-crud', [AjaxCOMMENTCRUDController::class, 'index']);
 Route::post('save-comment', [AjaxCOMMENTCRUDController::class, 'store']);
 Route::get('fetch-comments', [AjaxCOMMENTCRUDController::class, 'fetchComments']);
 Route::get('edit-comment/{id}', [AjaxCOMMENTCRUDController::class, 'edit']);
 Route::put('update-comment/{id}', [AjaxCOMMENTCRUDController::class, 'update']);
 Route::delete('delete-comment/{id}', [AjaxCOMMENTCRUDController::class, 'destroy']);
+
+Route::post('check-password', [AjaxCOMMENTCRUDController::class, 'authenticate']);

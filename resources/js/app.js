@@ -1,6 +1,11 @@
 require('./bootstrap');
 
 $(document).ready(function ($) {
+
+    $('#password-field').hide();
+    $('#ajax-comment-model').hide();
+    $('#comment-bank').show();
+
     fetchComments(); // Get the table from the dB to start
 
     $.ajaxSetup({
@@ -18,16 +23,12 @@ $(document).ready(function ($) {
             dataType: 'json',
             success: function (res) {
 
-                // console.log(res);
-
                 $('tbody').html("");
                 $.each(res.comments, function (key, item) {
 
-                    //if (!item.pending_approval) {
+                    var feedback = (item.feedback) ? 'Positive' : 'Negative';
 
-                        var feedback = (item.feedback) ? 'Positive' : 'Negative';
-
-                        $('tbody').append('<tr>\
+                    $('tbody').append('<tr>\
         <td><input type="checkbox" name="selected" id="selected' + item.id + '" value="' + item.selected + '"/></td>\
         <td>' + item.id + '</td>\
         <td>' + item.text + '</td>\
@@ -37,15 +38,30 @@ $(document).ready(function ($) {
         <td>' + item.author_name + '</td>\
         <td>' + item.author_email + '</td>\
         </tr>');
-                    //}
                 });
             },
             complete: function () {
                 isChecked();
             }
         });
-
     }
+
+    $('#adminLogin').click(function (evt) {
+        evt.preventDefault();
+
+        $('#comment-bank').hide();
+        $('#ajax-comment-model').hide();
+        $('#admin_password').val('');
+        $('#password-field').show();
+    });
+
+    $('body').on('click', '#btn-cancelAdminPassword', function (evt) {
+        evt.preventDefault();
+
+        $('#password-field').hide();
+        $('#comment-bank').show();
+        $('#ajax-comment-model').hide();
+    });
 
     $('#addNewComment').click(function (evt) {
         evt.preventDefault();
@@ -54,7 +70,9 @@ $(document).ready(function ($) {
         $('#ajaxCommentModel').html("Add New Comment");
         $('#btn-add').show();
         $('#btn-save').hide();
-        $('#ajax-comment-model').modal('show');
+        $('#addEditCommentForm').show();
+        $('#ajax-comment-model').show();
+
     });
 
     $('#editComment').click(function (evt) {
@@ -67,9 +85,7 @@ $(document).ready(function ($) {
             id = row.cells[1].innerHTML;
         });
 
-        if (id == -1)
-        {
-            // TODO display error message here
+        if (id == -1) {
             return;
         }
 
@@ -83,7 +99,8 @@ $(document).ready(function ($) {
                 $('#ajaxCommentModel').html("Edit Comment");
                 $('#btn-add').hide();
                 $('#btn-save').show();
-                //$('#ajax-comment-model').modal('show');
+                $('#addEditCommentForm').show();
+                $('#ajax-comment-model').show();
 
                 if (res.status == 404) {
                     $('#msgList').html("");
@@ -105,6 +122,35 @@ $(document).ready(function ($) {
         });
     });
 
+    $('body').on('click', '#btn-sendAdminPassword', function (evt) {
+        evt.preventDefault();
+
+        var admin_password = $("#admin_password").val();
+
+        $.ajax({
+            type: "POST",
+            url: "check-password",
+
+            data: {
+                password: admin_password,
+            },
+
+            dataType: 'json',
+            success: function (res) {
+                console.log(res);
+                if (res.status == 400) {
+                    $('#login-messages').text(res.message);
+                } else {
+                    fetchComments();
+                    $('#password-field').hide();
+                    $('#comment-bank').show();
+                    $('#ajax-comment-model').hide();
+                    $('#btn-save').html('Approve Comment');
+                }
+            },
+        });
+    });
+
     $('#deleteComment').click(function (evt) {
         evt.preventDefault();
         var id = -1;
@@ -115,9 +161,7 @@ $(document).ready(function ($) {
             id = row.cells[1].innerHTML;
         });
 
-        if (id == -1)
-        {
-            // TODO display error message here
+        if (id == -1) {
             return;
         }
 
@@ -127,7 +171,7 @@ $(document).ready(function ($) {
             url: "delete-comment/" + id,
             dataType: 'json',
             success: function (res) {
-                // console.log(res);
+
                 if (res.status == 404) {
                     $('#message').addClass('alert alert-danger');
                     $('#message').text(res.message);
@@ -139,12 +183,6 @@ $(document).ready(function ($) {
                 fetchComments();
             }
         });
-    });
-
-    $('#admin').click(function(evt) {
-        evt.preventDefault();
-        
-
     });
 
     $('body').on('click', '#btn-add', function (event) {
@@ -197,75 +235,14 @@ $(document).ready(function ($) {
                 $("#btn-add").html('Save');
                 $("#btn-add").attr("disabled", false);
                 $("#btn-add").hide();
+                $('#ajaxCommentModel').hide();
+                $('#addEditCommentForm').trigger("reset");
+                $('#addEditCommentForm').hide();
                 $('#ajax-comment-model').modal('hide');
                 $('#message').fadeOut(4000);
             }
         });
     });
-
-
-
-    // $('body').on('click', '.edit', function (evt) {
-    //     evt.preventDefault();
-    //     var id = $(this).data('id');
-
-    //     // ajax
-    //     $.ajax({
-    //         type: "GET",
-    //         url: "edit-comment/" + id,
-    //         dataType: 'json',
-    //         success: function (res) {
-    //             console.dir(res);
-    //             $('#ajaxCommentModel').html("Edit Comment");
-    //             $('#btn-add').hide();
-    //             $('#btn-save').show();
-    //             //$('#ajax-comment-model').modal('show');
-
-    //             if (res.status == 404) {
-    //                 $('#msgList').html("");
-    //                 $('#msgList').addClass('alert alert-danger');
-    //                 $('#msgList').text(res.message);
-
-    //             } else {
-
-    //                 // console.log(res.book.xxx);
-    //                 $('#comment').val(res.comment.text);
-    //                 $('#code').val(res.comment.code);
-    //                 $('#feedback').val(res.comment.feedback);
-    //                 $('#type').val(res.comment.type);
-    //                 $('#author_name').val(res.comment.author_name);
-    //                 $('#author_email').val(res.comment.author_email);
-    //                 $('#id').val(res.comment.id);
-    //             }
-    //         }
-    //     });
-    // });
-
-    // $('body').on('click', '.delete', function (evt) {
-    //     evt.preventDefault();
-    //     if (confirm("Delete Comment?") == true) {
-    //         var id = $(this).data('id');
-
-    //         // ajax
-    //         $.ajax({
-    //             type: "DELETE",
-    //             url: "delete-comment/" + id,
-    //             dataType: 'json',
-    //             success: function (res) {
-    //                 // console.log(res);
-    //                 if (res.status == 404) {
-    //                     $('#message').addClass('alert alert-danger');
-    //                     $('#message').text(res.message);
-    //                 } else {
-    //                     $('#message').html("");
-    //                     $('#message').addClass('alert alert-success');
-    //                     $('#message').text(res.message);
-    //                 }
-    //                 fetchComments();
-    //             }
-    //         });
-    //     }
-    // });
 
     $('body').on('click', '#btn-save', function (event) {
         event.preventDefault();
@@ -277,7 +254,6 @@ $(document).ready(function ($) {
         var author_name = $("#author_name").val();
         var author_email = $("#author_email").val();
 
-        // alert("id="+id+" title = " + title);
         $("#btn-save").html('Please Wait...');
         $("#btn-save").attr("disabled", true);
 
@@ -292,6 +268,7 @@ $(document).ready(function ($) {
                 type: type,
                 author_name: author_name,
                 author_email: author_email,
+                pending_approval: 0
             },
 
             dataType: 'json',
@@ -316,6 +293,9 @@ $(document).ready(function ($) {
             complete: function () {
                 $("#btn-save").html('Save changes');
                 $("#btn-save").attr("disabled", false);
+                $('#ajaxCommentModel').hide();
+                $('#addEditCommentForm').trigger("reset");
+                $('#addEditCommentForm').hide();
                 $('#ajax-comment-model').modal('hide');
                 $('#message').fadeOut(4000);
             }
@@ -334,14 +314,11 @@ $(document).ready(function ($) {
             message += row.cells[2].innerHTML;
         });
 
-
         //Display selected Row data in Alert Box.
 
         $("#messageList").html(message);
         return false;
-
     });
-
 
     $("#copy").click(function () {
 
@@ -351,8 +328,6 @@ $(document).ready(function ($) {
 
     });
 
-
-
     function isChecked() {
 
         $("#Table1 input[type=checkbox]").each(function () {
@@ -361,8 +336,6 @@ $(document).ready(function ($) {
             } else {
                 $(this).prop("checked", false);
             }
-
         });
     }
-
 });
